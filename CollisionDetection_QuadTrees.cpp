@@ -17,10 +17,12 @@ template <class T>
 class QuadTree
 {
 public:
-    struct Item
+    using Storage = std::list<std::pair<T, def::rectf>>;
+
+    struct ItemLocation
     {
-        def::rectf area;
-        T data;
+        typename Storage::iterator iterator;
+        Storage* container = nullptr;
     };
 
 public:
@@ -75,7 +77,7 @@ public:
         return count;
     }
 
-    void insert(const T& item, const def::rectf& area)
+    ItemLocation insert(const T& item, const def::rectf& area)
     {
         for (size_t i = 0; i < 4; i++)
         {
@@ -84,23 +86,24 @@ public:
                 if (!m_Children[i])
                     m_Children[i] = std::make_shared<QuadTree<T>>(m_ChildrenAreas[i], m_Level + 1);
 
-                m_Children[i]->insert(item, area);
-                return;
+                return m_Children[i]->insert(item, area);
             }
         }
 
         // It fits within the area of the current child
         // but it doesn't fit within any area of the children
         // so stop here
-        m_Items.push_back({ area, item });
+        m_Items.push_back({ item, area });
+
+        return { std::prev(m_Items.end()), &m_Items };
     }
 
     void find(const def::rectf& area, std::list<T>& data)
     {
         for (const auto& item : m_Items)
         {
-            if (overlaps(area, item.area))
-                data.push_back(item.data);
+            if (overlaps(area, item.second))
+                data.push_back(item.first);
         }
 
         for (size_t i = 0; i < 4; i++)
@@ -119,7 +122,7 @@ public:
     bool remove(const T& item)
     {
         auto it = std::find_if(m_Items.begin(), m_Items.end(),
-            [&](const Item& i) { return i.data == item; });
+                               [&](const std::pair<T, def::rectf>& i) { return i.first == item; });
 
         if (it != m_Items.end())
         {
@@ -142,12 +145,12 @@ public:
     void collect_items(std::list<T>& items)
     {
         for (const auto& item : m_Items)
-            items.push_back(item.data);
+            items.push_back(item.first);
 
         for (auto& child : m_Children)
         {
             if (child)
-                 child->collect_items(items);
+                child->collect_items(items);
         }
     }
 
@@ -174,19 +177,25 @@ private:
     std::array<def::rectf, 4> m_ChildrenAreas;
 
     // Items in the current quad
-    std::vector<Item> m_Items;
+    Storage m_Items;
 };
 
 template <class T>
 class QuadTreeContainer
 {
 public:
-    using PointerType = typename std::list<T>::iterator;
+    struct Item
+    {
+        T data;
+        typename QuadTree<typename std::list<Item>::iterator>::ItemLocation location;
+    };
+
+    using Storage = std::list<Item>;
 
     QuadTreeContainer(const def::rectf& area = { {0.0f, 0.0f}, {128.0f, 128.0f} }, size_t level = 0)
     {
         create(area, level);
-    }
+    } 
 
     void create(const def::rectf& area = { {0.0f, 0.0f}, {128.0f, 128.0f} }, size_t level = 0)
     {
@@ -205,22 +214,22 @@ public:
 
     void insert(const T& item, const def::rectf& area)
     {
-        m_Items.push_back(item);
-        m_Root.insert(std::prev(m_Items.end()), area);
+        m_Items.push_back({ item });
+        m_Items.back().location = m_Root.insert(std::prev(m_Items.end()), area);
     }
 
-    void find(const def::rectf& area, std::list<PointerType>& data)
+    void find(const def::rectf& area, std::list<typename Storage::iterator>& data)
     {
         m_Root.find(area, data);
     }
 
-    void remove(PointerType item)
+    void remove(typename Storage::iterator item)
     {
-        m_Root.remove(item);
+        item->location.container->erase(item->location.iterator);
         m_Items.erase(item);
     }
 
-    void collect_items(std::list<PointerType>& items)
+    void collect_items(Storage& items)
     {
         m_Root.collect_items(items);
     }
@@ -231,8 +240,8 @@ public:
     }
 
 private:
-    std::list<T> m_Items;
-    QuadTree<PointerType> m_Root;
+    Storage m_Items;
+    QuadTree<typename Storage::iterator> m_Root;
 
 };
 
@@ -245,18 +254,28 @@ public:
         UseOnlyTextures(true);
     }
 
+    enum class PlantID
+    {
+        LargeTree,
+        LargeBush,
+        SmallTree,
+        SmallBush
+    };
+
     struct Object
     {
         def::rectf area;
-        def::Pixel colour;
+        PlantID id;
     };
 
     QuadTreeContainer<Object> tree;
 
     def::AffineTransforms at;
 
-    float worldSize = 10000.0f;
+    float worldSize = 25000.0f;
     float searchAreaSize = 100.0f;
+
+    def::Graphic plants;
 
 protected:
     bool OnUserCreate() override
@@ -269,16 +288,24 @@ protected:
                 return min + (float)rand() / (float)RAND_MAX * (max - min);
             };
 
-        for (size_t i = 0; i < 10000; i++)
+        for (size_t i = 0; i < 1000000; i++)
         {
             Object o;
 
             o.area.pos = { rand_float(0.0f, worldSize), rand_float(0.0f, worldSize) };
-            o.area.size = { rand_float(10.0f, 100.0f), rand_float(10.0f, 100.0f) };
-            o.colour = def::Pixel(rand() % 256, rand() % 256, rand() % 256);
+            o.id = PlantID(rand() % 4);
+
+            o.area.size.x = 16.0f;
+            
+            if (o.id == PlantID::LargeTree || o.id == PlantID::LargeBush)
+                o.area.size.y = 32.0f;
+            else
+                o.area.size.x = 16.0f;
 
             tree.insert(o, o.area);
         }
+
+        plants.Load("plants.png");
 
         return true;
     }
@@ -314,7 +341,7 @@ protected:
 
         if (i->GetButtonState(def::Button::LEFT).held)
         {
-            std::list<QuadTreeContainer<Object>::PointerType> selected;
+            std::list<std::list<QuadTreeContainer<Object>::Item>::iterator> selected;
             tree.find(selectedArea, selected);
 
             for (auto& item : selected)
@@ -326,17 +353,22 @@ protected:
 
         def::rectf searchArea = { { origin.x, origin.y }, { size.x, size.y } };
 
-        std::list<QuadTreeContainer<Object>::PointerType> objects;
+        std::list<std::list<QuadTreeContainer<Object>::Item>::iterator> objects;
         tree.find(searchArea, objects);
 
-        ClearTexture(def::BLACK);
+        ClearTexture(def::GREEN);
 
         for (const auto& obj : objects)
         {
-            at.FillTextureRectangle(
-                { obj->area.pos.x, obj->area.pos.y },
-                { obj->area.size.x, obj->area.size.y },
-                obj->colour);
+            def::Vector2f pos = { obj->data.area.pos.x, obj->data.area.pos.y };
+
+            switch (obj->data.id)
+            {
+            case PlantID::LargeTree: at.DrawPartialTexture(pos, plants.texture, { 0.0f, 0.0f }, { 16.0f, 32.0f }); break;
+            case PlantID::LargeBush: at.DrawPartialTexture(pos, plants.texture, { 16.0f, 0.0f }, { 16.0f, 32.0f }); break;
+            case PlantID::SmallTree: at.DrawPartialTexture(pos, plants.texture, { 32.0f, 7.0f }, { 16.0f, 25.0f }); break;
+            case PlantID::SmallBush: at.DrawPartialTexture(pos, plants.texture, { 48.0f, 16.0f }, { 16.0f, 16.0f }); break;
+            }
         }
 
         DrawTextureString({ 0, 0 }, std::to_string(objects.size()));
@@ -344,7 +376,7 @@ protected:
             { selectedArea.pos.x, selectedArea.pos.y },
             { selectedArea.size.x, selectedArea.size.y },
             def::Pixel(255, 255, 255, 100));
-        
+
         return true;
     }
 };
