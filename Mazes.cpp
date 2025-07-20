@@ -1,146 +1,169 @@
-#include "../Include/defGameEngine.hpp"
+#include "defGameEngine.hpp"
 
 #include <stack>
+#include <chrono>
+#include <thread>
 
-class Maze : public def::GameEngine
+class Example : public def::GameEngine
 {
 public:
-	Maze()
-	{
-		GetWindow()->SetTitle("Maze");
-	}
+    Example()
+    {
+        GetWindow()->SetTitle("Example");
+    }
 
-private:
-	std::stack<def::Vector2i> stack;
-	std::vector<int> maze;
-	int nVisited;
+    const def::Vector2i mapSize = { 16, 16 };
+    def::Vector2i tileSize;
 
-	enum
-	{
-		CELL_DIR_N = 0,
-		CELL_DIR_E = 2,
-		CELL_DIR_S = 4,
-		CELL_DIR_W = 8,
-		CELL_VISITED = 16
-	};
+    enum Direction : int
+    {
+        DIR_NORTH = 1 << 0,
+        DIR_SOUTH = 1 << 1,
+        DIR_EAST = 1 << 2,
+        DIR_WEST = 1 << 3,
+        DIR_VISITED = 1 << 4
+    };
 
-	def::Vector2i vMazeSize;
-	int nCellSize;
+    int* map = nullptr;
+
+    int visited = 0;
+    std::stack<def::Vector2i> frontier;
 
 protected:
-	bool OnUserCreate() override
-	{
-		vMazeSize = { 40, 25 };
-		nCellSize = 3;
+    bool OnUserCreate() override
+    {
+        def::Vector2i screenSize = GetWindow()->GetScreenSize();
 
-		// Reset maze
-		maze.resize(vMazeSize.x * vMazeSize.y, 0);
-		nVisited = 0;
+        tileSize = screenSize / mapSize;
 
-		// Update stack
-		stack.push({ 0, 0 });
-		maze[0] = CELL_VISITED;
-		nVisited = 1;
+        map = new int[screenSize.x * screenSize.y]{ 0 };
 
-		return true;
-	}
+        visited = 1;
+        frontier.push({ 0, 0 });
 
-	bool OnUserUpdate(float fDeltaTime) override
-	{
-		auto offset = [&](int ox, int oy)
-			{
-				def::Vector2i& top = stack.top();
-				return (top.y + oy) * vMazeSize.x + (top.x + ox);
-			};
+        return true;
+    }
 
-		if (nVisited < vMazeSize.x * vMazeSize.y)
-		{
-			std::vector<int> vecNeighbors;
-			def::Vector2i& vLast = stack.top();
+    void GetNeighbours(const def::Vector2i cell, std::vector<std::pair<int, def::Vector2i>>& out)
+    {
+        def::Vector2i coord;
 
-			if (vLast.y > 0 && (maze[offset(0, -1)] & CELL_VISITED) == 0)
-				vecNeighbors.push_back(0);
+        auto val = [&](int ox, int oy)
+        {
+            coord.x = cell.x + ox;
+            coord.y = cell.y + oy;
+            return map[(cell.y + oy) * mapSize.x + cell.x + ox];
+        };
 
-			if (vLast.x < vMazeSize.x - 1 && (maze[offset(1, 0)] & CELL_VISITED) == 0)
-				vecNeighbors.push_back(1);
+        if (cell.x - 1 >= 0 && val(-1, 0) == 0)
+            out.push_back({ DIR_WEST, coord });
 
-			if (vLast.y < vMazeSize.y - 1 && (maze[offset(0, 1)] & CELL_VISITED) == 0)
-				vecNeighbors.push_back(2);
+        if (cell.x + 1 < mapSize.x && val(1, 0) == 0)
+            out.push_back({ DIR_EAST, coord });
 
-			if (vLast.x > 0 && (maze[offset(-1, 0)] & CELL_VISITED) == 0)
-				vecNeighbors.push_back(3);
+        if (cell.y - 1 >= 0 && val(0, -1) == 0)
+            out.push_back({ DIR_NORTH, coord });
 
-			if (vecNeighbors.empty())
-			{
-				// Go back
-				stack.pop();
-			}
-			else
-			{
-				int nDirection = vecNeighbors[rand() % vecNeighbors.size()];
+        if (cell.y + 1 < mapSize.y && val(0, 1) == 0)
+            out.push_back({ DIR_SOUTH, coord });
+    }
 
-				// Create a path between the neighbor
-				// and the current cell
+    bool OnUserUpdate(float deltaTime) override
+    {
+        // Build a maze
 
-				if (nDirection == 0) // North
-				{
-					maze[offset(0, -1)] |= CELL_DIR_S | CELL_VISITED;
-					maze[offset(0, 0)] |= CELL_DIR_N;
-					stack.push({ vLast.x, vLast.y - 1 });
-				}
+        //using namespace std::chrono_literals;
+        //std::this_thread::sleep_for(30ms);
 
-				if (nDirection == 1) // East
-				{
-					maze[offset(1, 0)] |= CELL_DIR_W | CELL_VISITED;
-					maze[offset(0, 0)] |= CELL_DIR_E;
-					stack.push({ vLast.x + 1, vLast.y });
-				}
+        if (visited < mapSize.x * mapSize.y)
+        {
+            const def::Vector2i& cell = frontier.top();
 
-				if (nDirection == 2) // South
-				{
-					maze[offset(0, 1)] |= CELL_DIR_N | CELL_VISITED;
-					maze[offset(0, 0)] |= CELL_DIR_S;
-					stack.push({ vLast.x, vLast.y + 1 });
-				}
+            // Each neighbour has its direction relative to the current cell
+            // and a coordinate
+            std::vector<std::pair<int, def::Vector2i>> neighs;
+            GetNeighbours(cell, neighs);
+            
+            if (neighs.empty())
+            {
+                // We've stucked so go backwards
+                frontier.pop();
+            }
+            else
+            {
+                // We have some neighbours so let's randomly pick one of them
+                const auto& next = neighs[rand() % (int)neighs.size()];
 
-				if (nDirection == 3) // West
-				{
-					maze[offset(-1, 0)] |= CELL_DIR_E | CELL_VISITED;
-					maze[offset(0, 0)] |= CELL_DIR_W;
-					stack.push({ vLast.x - 1, vLast.y });
-				}
+                auto get = [&](const def::Vector2i& p) -> int&
+                {
+                    return map[p.y * mapSize.x + p.x];
+                };
 
-				nVisited++;
-			}
-		}
+                // Update the current cell
+                get(cell) |= next.first | DIR_VISITED;
 
+                int& cellValue = get(next.second);
 
-		Clear(def::DARK_GREEN);
+                // Update its neighbour
+                if (next.first == DIR_NORTH) cellValue |= DIR_SOUTH;
+                if (next.first == DIR_SOUTH) cellValue |= DIR_NORTH;
+                if (next.first == DIR_WEST)  cellValue |= DIR_EAST;
+                if (next.first == DIR_EAST)  cellValue |= DIR_WEST;
 
-		for (int i = 0; i < vMazeSize.x * vMazeSize.y; i++)
-		{
-			def::Vector2i p = { i % vMazeSize.x, i / vMazeSize.x };
+                // Push the neighbour to the frontier
+                frontier.push(next.second);
 
-			if (maze[i] & CELL_VISITED)
-				FillRectangle(p * (nCellSize + 1) + 1, def::Vector2i(nCellSize, nCellSize), def::GREEN);
+                visited++;
+            }
+        }
 
-			for (int c = 0; c < nCellSize; c++)
-			{
-				if (maze[i] & CELL_DIR_S) Draw(p.x * (nCellSize + 1) + c + 1, p.y * (nCellSize + 1) + nCellSize + 1, def::GREEN);
-				if (maze[i] & CELL_DIR_E) Draw(p.x * (nCellSize + 1) + nCellSize + 1, p.y * (nCellSize + 1) + c + 1, def::GREEN);
-			}
-		}
+        // Draw the maze
 
-		return true;
-	}
+        Clear(def::BLUE);
+
+        auto draw_line = [&](int x1, int y1, int x2, int y2)
+        {
+            DrawLine(x1 * tileSize.x, y1 * tileSize.y, x2 * tileSize.x, y2 * tileSize.y, def::WHITE);
+        };
+
+        def::Vector2i screenSize = GetWindow()->GetScreenSize();
+
+        for (int y = 0; y < mapSize.y; y++)
+            for (int x = 0; x < mapSize.x; x++)
+            {
+                int cell = map[y * mapSize.x + x];
+
+                if (cell & DIR_VISITED)
+                {
+                    if ((cell & DIR_NORTH) == 0)
+                        draw_line(x, y, x + 1, y);
+
+                    if ((cell & DIR_SOUTH) == 0)
+                        draw_line(x, y + 1, x + 1, y + 1);
+
+                    if ((cell & DIR_EAST) == 0)
+                        draw_line(x + 1, y, x + 1, y + 1);
+
+                    if ((cell & DIR_WEST) == 0)
+                        draw_line(x, y, x, y + 1);
+                }
+            }
+
+        // Draw our current position
+
+        FillRectangle(frontier.top() * tileSize, tileSize, def::GREEN);
+
+        return true;
+    }
+
 };
 
 int main()
 {
-	Maze demo;
+    Example demo;
 
-	demo.Construct(161, 101, 8, 8);
-	demo.Run();
+    if (demo.Construct(256, 240, 4, 4, false, true))
+        demo.Run();
 
-	return 0;
+    return 0;
 }
