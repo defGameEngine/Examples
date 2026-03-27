@@ -250,7 +250,7 @@ class App : public def::GameEngine
 public:
     App()
     {
-        GetWindow()->SetTitle("Quad trees");
+        Window().SetTitle("Quad trees");
         UseOnlyTextures(true);
     }
 
@@ -281,7 +281,7 @@ protected:
     bool OnUserCreate() override
     {
         tree.create({ {0.0f, 0.0f}, {worldSize, worldSize} });
-        at.SetViewArea(GetWindow()->GetScreenSize());
+        at.SetViewArea(Window().GetScreenSize());
 
         auto rand_float = [](float min, float max)
             {
@@ -315,10 +315,10 @@ protected:
         auto i = GetInput();
 
         if (i->GetButtonState(def::Button::WHEEL).pressed)
-            at.StartPan(GetInput()->GetMousePosition());
+            at.StartPan(Input().GetMousePosition());
 
         if (i->GetButtonState(def::Button::WHEEL).held)
-            at.UpdatePan(GetInput()->GetMousePosition());
+            at.UpdatePan(Input().GetMousePosition());
 
         if (i->GetScrollDelta() > 0)
         {

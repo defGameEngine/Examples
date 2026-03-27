@@ -7,7 +7,7 @@ class AxisKiller : public def::GameEngine
 public:
 	AxisKiller()
 	{
-		GetWindow()->SetTitle("Axis Killer");
+		Window().SetTitle("Axis Killer");
 	}
 
 	int border1_start;
@@ -52,14 +52,14 @@ protected:
 
 	bool OnUserCreate() override
 	{
-		border1_start = GetWindow()->GetScreenWidth() * 0.15f;
-		border1_end = GetWindow()->GetScreenWidth() * 0.95f;
+		border1_start = Window().GetScreenWidth() * 0.15f;
+		border1_end = Window().GetScreenWidth() * 0.95f;
 
-		border2_start = GetWindow()->GetScreenHeight() * 0.15f;
-		border2_end = GetWindow()->GetScreenHeight() * 0.9f;
+		border2_start = Window().GetScreenHeight() * 0.15f;
+		border2_end = Window().GetScreenHeight() * 0.9f;
 
-		pos1 = { (float)border1_start, GetWindow()->GetScreenHeight() * 0.85f };
-		pos2 = { GetWindow()->GetScreenWidth() * 0.9f, (float)border2_start };
+		pos1 = { (float)border1_start, Window().GetScreenHeight() * 0.85f };
+		pos2 = { Window().GetScreenWidth() * 0.9f, (float)border2_start };
 
 		NewEnemy();
 
@@ -69,17 +69,17 @@ protected:
 	bool OnUserUpdate(float dt) override
 	{
 		// Change position of players
-		if (GetInput()->GetButtonState(def::Button::LEFT).held)
+		if (Input().GetButtonState(def::Button::LEFT).held)
 		{
-			if (PointVsCircle(GetInput()->GetMousePosition(), pos1, objRadius))
-				pos1.x = std::max(border1_start, std::min(border1_end, GetInput()->GetMouseX()));
+			if (PointVsCircle(Input().GetMousePosition(), pos1, objRadius))
+				pos1.x = std::max(border1_start, std::min(border1_end, Input().GetMouseX()));
 
-			if (PointVsCircle(GetInput()->GetMousePosition(), pos2, objRadius))
-				pos2.y = std::max(border2_start, std::min(border2_end, GetInput()->GetMouseY()));
+			if (PointVsCircle(Input().GetMousePosition(), pos2, objRadius))
+				pos2.y = std::max(border2_start, std::min(border2_end, Input().GetMouseY()));
 		}
 
 		// Shoot
-		if (GetInput()->GetKeyState(def::Key::SPACE).pressed)
+		if (Input().GetKeyState(def::Key::SPACE).pressed)
 		{
 			bullets.push_back({ { 0.0f, -1.0f }, { pos1.x, pos1.y - objRadius - 1 } });
 			bullets.push_back({ { -1.0f, 0.0f }, { pos2.x - objRadius - 1, pos2.y } });

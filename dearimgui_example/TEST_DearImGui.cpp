@@ -8,7 +8,7 @@ class Sample : public def::GameEngine
 public:
 	Sample()
 	{
-		GetWindow()->SetTitle("Sample");
+		Window().SetTitle("Sample");
 	}
 
 	~Sample()

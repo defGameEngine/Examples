@@ -44,14 +44,14 @@ class PerlinNoise : public def::GameEngine
 public:
 	PerlinNoise()
 	{
-		GetWindow()->SetTitle("Perlin Noise");
+		Window().SetTitle("Perlin Noise");
 	}
 
 private:
 	void UpdateMap()
 	{
-		for (int i = 0; i < GetWindow()->GetScreenWidth(); i++)
-			for (int j = 0; j < GetWindow()->GetScreenHeight(); j++)
+		for (int i = 0; i < Window().GetScreenWidth(); i++)
+			for (int j = 0; j < Window().GetScreenHeight(); j++)
 			{
 				float n = 0.0f;
 
@@ -60,13 +60,13 @@ private:
 
 				for (int o = 0; o < octaves; o++)
 				{
-					n += PerlinNoise2D(Vector2f(i, j) / (Vector2f)GetWindow()->GetScreenSize() * frequency) * amplitude;
+					n += PerlinNoise2D(Vector2f(i, j) / (Vector2f)Window().GetScreenSize() * frequency) * amplitude;
 
 					frequency *= 2.0f;
 					amplitude *= 0.5f;
 				}
 
-				map[j * GetWindow()->GetScreenWidth() + i] = std::clamp(n * 1.2f, -1.0f, 1.0f) * 0.5f + 0.5f;
+				map[j * Window().GetScreenWidth() + i] = std::clamp(n * 1.2f, -1.0f, 1.0f) * 0.5f + 0.5f;
 			}
 	}
 
@@ -77,7 +77,7 @@ private:
 protected:
 	bool OnUserCreate() override
 	{
-		int size = GetWindow()->GetScreenWidth() * GetWindow()->GetScreenHeight();
+		int size = Window().GetScreenWidth() * Window().GetScreenHeight();
 
 		map = new float[size];
 		memset(map, 0, sizeof(float) * size);
@@ -89,17 +89,17 @@ protected:
 
 	bool OnUserUpdate(float deltaTime) override
 	{
-		if (GetInput()->GetKeyState(def::Key::LEFT).pressed) octaves--;
-		if (GetInput()->GetKeyState(def::Key::RIGHT).pressed) octaves++;
+		if (Input().GetKeyState(def::Key::LEFT).pressed) octaves--;
+		if (Input().GetKeyState(def::Key::RIGHT).pressed) octaves++;
 		octaves = std::clamp(octaves, 0, 32);
 
-		if (GetInput()->GetKeyState(def::Key::SPACE).pressed)
+		if (Input().GetKeyState(def::Key::SPACE).pressed)
 			UpdateMap();
 
-		for (int i = 0; i < GetWindow()->GetScreenWidth(); i++)
-			for (int j = 0; j < GetWindow()->GetScreenHeight(); j++)
+		for (int i = 0; i < Window().GetScreenWidth(); i++)
+			for (int j = 0; j < Window().GetScreenHeight(); j++)
 			{
-				float n = map[j * GetWindow()->GetScreenWidth() + i];
+				float n = map[j * Window().GetScreenWidth() + i];
 				uint8_t col = uint8_t(n * 12.0f);
 
 				def::Pixel pix;

@@ -36,7 +36,7 @@ class Fireworks : public def::GameEngine
 public:
 	Fireworks()
 	{
-		GetWindow()->SetTitle("Fireworks");
+		Window().SetTitle("Fireworks");
 	}
 
 private:
@@ -56,8 +56,8 @@ private:
 	{
 		Firework f;
 
-		f.pos.x = ((rand() + int(float(GetWindow()->GetScreenWidth() - 1) * 0.25f)) % int(float(GetWindow()->GetScreenWidth() - 1) * 0.75f));
-		f.pos.y = GetWindow()->GetScreenHeight() - 1;
+		f.pos.x = ((rand() + int(float(Window().GetScreenWidth() - 1) * 0.25f)) % int(float(Window().GetScreenWidth() - 1) * 0.75f));
+		f.pos.y = Window().GetScreenHeight() - 1;
 
 		f.explodedPos = { -1.0f, -1.0f };
 

@@ -20,7 +20,7 @@ class RayCasting : public def::GameEngine
 public:
 	RayCasting()
 	{
-		GetWindow()->SetTitle("Ray Casting");
+		Window().SetTitle("Ray Casting");
 	}
 
 	virtual ~RayCasting()
@@ -116,7 +116,7 @@ protected:
 		objects.push_back({ {7.5f, 7.5f}, {0.0f, 0.0f}, 0.0f, Objects::BARREL });
 		objects.push_back({ {10.0f, 3.0f}, {0.0f, 0.0f}, 0.0f, Objects::BARREL });
 
-		depthBuffer = new float[GetWindow()->GetScreenWidth()];
+		depthBuffer = new float[Window().GetScreenWidth()];
 
 		return true;
 	}
@@ -132,7 +132,7 @@ protected:
 		auto removeIter = std::remove_if(objects.begin(), objects.end(), [](const Object& o) { return o.toRemove; });
 		if (removeIter != objects.end()) objects.erase(removeIter);
 
-		if (GetInput()->GetKeyState(def::Key::W).held)
+		if (Input().GetKeyState(def::Key::W).held)
 		{
 			def::Vector2f vel = playerVel * moveSpeed * deltaTime;
 
@@ -143,7 +143,7 @@ protected:
 				playerPos.y += vel.y;
 		}
 
-		if (GetInput()->GetKeyState(def::Key::S).held)
+		if (Input().GetKeyState(def::Key::S).held)
 		{
 			def::Vector2f vel = playerVel * moveSpeed * deltaTime;
 
@@ -154,7 +154,7 @@ protected:
 				playerPos.y -= vel.y;
 		}
 
-		if (GetInput()->GetKeyState(def::Key::A).held)
+		if (Input().GetKeyState(def::Key::A).held)
 		{
 			float oldVelX = playerVel.x;
 			float oldPlaneX = playerPlane.x;
@@ -166,7 +166,7 @@ protected:
 			playerPlane.y = oldPlaneX * sin(rotSpeed * deltaTime) + playerPlane.y * cos(rotSpeed * deltaTime);
 		}
 
-		if (GetInput()->GetKeyState(def::Key::D).held)
+		if (Input().GetKeyState(def::Key::D).held)
 		{
 			float oldVelX = playerVel.x;
 			float oldPlaneX = playerPlane.x;
@@ -200,9 +200,9 @@ protected:
 		Clear(def::BLACK);
 
 		// Perform DDA raycast algorithm
-		for (int x = 0; x < GetWindow()->GetScreenWidth(); x++)
+		for (int x = 0; x < Window().GetScreenWidth(); x++)
 		{
-			float playerAngle = 2.0f * (float)x / (float)GetWindow()->GetScreenWidth() - 1.0f;
+			float playerAngle = 2.0f * (float)x / (float)Window().GetScreenWidth() - 1.0f;
 
 			def::Vector2f rayDir = playerVel + playerPlane * playerAngle;
 			def::Vector2f distance = (1.0f / rayDir).Abs();
@@ -269,10 +269,10 @@ protected:
 			else
 				distanceToWall = fromCurrentDistance.y - distance.y;
 
-			int lineHeight = int((float)GetWindow()->GetScreenHeight() / distanceToWall);
+			int lineHeight = int((float)Window().GetScreenHeight() / distanceToWall);
 
-			int ceilingPos = std::max(-lineHeight + GetWindow()->GetScreenHeight() / 2, 0);
-			int floorPos = std::min(lineHeight + GetWindow()->GetScreenHeight() / 2, GetWindow()->GetScreenHeight() - 1);
+			int ceilingPos = std::max(-lineHeight + Window().GetScreenHeight() / 2, 0);
+			int floorPos = std::min(lineHeight + Window().GetScreenHeight() / 2, Window().GetScreenHeight() - 1);
 
 			float testPoint;
 			float texStep, texPos;
@@ -290,13 +290,13 @@ protected:
 				tex.x = texSize.x - tex.x - 1;
 
 			texStep = (float)texSize.y / (float)lineHeight / 2;
-			texPos = float(ceilingPos - GetWindow()->GetScreenHeight() / 2 + lineHeight) * texStep;
+			texPos = float(ceilingPos - Window().GetScreenHeight() / 2 + lineHeight) * texStep;
 
 			for (int y = 0; y <= floorPos; y++)
 			{
 				if (y <= ceilingPos) // ceiling and floor
 				{
-					float planeZ = float(GetWindow()->GetScreenHeight() / 2) / float(GetWindow()->GetScreenHeight() / 2 - y);
+					float planeZ = float(Window().GetScreenHeight() / 2) / float(Window().GetScreenHeight() / 2 - y);
 
 					def::Vector2f planePoint = playerPos + 2.0f * rayDir * planeZ;
 					def::Vector2f planeSample = planePoint - planePoint.Floor();
@@ -304,7 +304,7 @@ protected:
 					def::Vector2i texPos = (planeSample * texSize).Min(texSize);
 
 					Draw(x, y, tiles->GetPixel(ceilingId * texSize.x + texPos.x, texPos.y)); // ceiling
-					Draw(x, GetWindow()->GetScreenHeight() - y, tiles->GetPixel(floorId * texSize.x + texPos.x, texPos.y)); // floor
+					Draw(x, Window().GetScreenHeight() - y, tiles->GetPixel(floorId * texSize.x + texPos.x, texPos.y)); // floor
 				}
 				else if (y > ceilingPos && !noWall) // wall
 				{
@@ -337,27 +337,27 @@ protected:
 
 				float aspectRatio = transform.x / transform.y;
 
-				def::Vector2i objectScreenPos = { int(float(GetWindow()->GetScreenWidth() / 2) * (1.0f + aspectRatio)), GetWindow()->GetScreenHeight() / 2 };
-				int objectScreenSize = int((float)GetWindow()->GetScreenHeight() / transform.y);
+				def::Vector2i objectScreenPos = { int(float(Window().GetScreenWidth() / 2) * (1.0f + aspectRatio)), Window().GetScreenHeight() / 2 };
+				int objectScreenSize = int((float)Window().GetScreenHeight() / transform.y);
 
 				def::Vector2i ceilingPos = def::Vector2i(objectScreenSize, objectScreenSize) / -2 + objectScreenPos;
 				def::Vector2i floorPos = def::Vector2i(objectScreenSize, objectScreenSize) / 2 + objectScreenPos;
 
-				ceilingPos = ceilingPos.Max(def::Vector2i(0, 0)).Min(GetWindow()->GetScreenSize());
-				floorPos = floorPos.Max(def::Vector2i(0, 0)).Min(GetWindow()->GetScreenSize());
+				ceilingPos = ceilingPos.Max(def::Vector2i(0, 0)).Min(Window().GetScreenSize());
+				floorPos = floorPos.Max(def::Vector2i(0, 0)).Min(Window().GetScreenSize());
 
 				SetPixelMode(def::Pixel::Mode::MASK);
 
 				for (int x = ceilingPos.x; x < floorPos.x; x++)
 				{
-					int texX = (GetWindow()->GetScreenWidth() * (x - (-objectScreenSize / 2 + objectScreenPos.x)) * texSize.x / objectScreenSize) / GetWindow()->GetScreenWidth();
+					int texX = (Window().GetScreenWidth() * (x - (-objectScreenSize / 2 + objectScreenPos.x)) * texSize.x / objectScreenSize) / Window().GetScreenWidth();
 
-					if (transform.y >= 0 && x >= 0 && x < GetWindow()->GetScreenWidth() && transform.y < depthBuffer[x])
+					if (transform.y >= 0 && x >= 0 && x < Window().GetScreenWidth() && transform.y < depthBuffer[x])
 					{
 						for (int y = ceilingPos.y; y < floorPos.y; y++)
 						{
-							int d = y * GetWindow()->GetScreenWidth() - GetWindow()->GetScreenHeight() * GetWindow()->GetScreenWidth() / 2 + objectScreenSize * GetWindow()->GetScreenWidth() / 2;
-							int texY = (d * texSize.y / objectScreenSize) / GetWindow()->GetScreenWidth();
+							int d = y * Window().GetScreenWidth() - Window().GetScreenHeight() * Window().GetScreenWidth() / 2 + objectScreenSize * Window().GetScreenWidth() / 2;
+							int texY = (d * texSize.y / objectScreenSize) / Window().GetScreenWidth();
 
 							Draw(x, y, tiles->GetPixel((int)o.type * texSize.x + texX, texY));
 							depthBuffer[x] = transform.y;
@@ -383,7 +383,7 @@ protected:
 
 		FillRectangle((int)playerPos.x * 2, (int)playerPos.y * 2, 2, 2, def::YELLOW);
 
-		if (GetInput()->GetButtonState(def::Button::LEFT).pressed)
+		if (Input().GetButtonState(def::Button::LEFT).pressed)
 		{
 			Object o;
 			o.pos = playerPos;

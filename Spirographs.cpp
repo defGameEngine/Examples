@@ -8,7 +8,7 @@ class Spirographs : public def::GameEngine
 public:
     Spirographs()
     {
-        GetWindow()->SetTitle("Spirographs!");
+        Window().SetTitle("Spirographs!");
     }
 
     def::Vector2i bigGearPos;
@@ -21,9 +21,9 @@ public:
 protected:
     bool OnUserCreate() override
     {
-        bigGearPos = GetWindow()->GetScreenSize() / 2;
+        bigGearPos = Window().GetScreenSize() / 2;
 
-        const auto ss = GetWindow()->GetScreenSize();
+        const auto ss = Window().GetScreenSize();
         pathScene = new def::Pixel[ss.x * ss.y];
 
         for (int y = 0; y < ss.y; y++)
@@ -47,7 +47,7 @@ protected:
         DrawCircle(bigGearPos, BIG_GEAR_RADIUS);
         DrawCircle(smallGearPos, SMALL_GEAR_RADIUS);
 
-        const auto ss = GetWindow()->GetScreenSize();
+        const auto ss = Window().GetScreenSize();
         pathScene[penPos.y * ss.x + penPos.x] = def::Pixel(fabs(sinf(penAngle)) * 0xFFFFFFFF);
         
         for (int y = 0; y < ss.y; y++)

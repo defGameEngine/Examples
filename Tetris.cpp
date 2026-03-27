@@ -58,7 +58,7 @@ class Tetris : public def::GameEngine
 public:
 	Tetris()
 	{
-		GetWindow()->SetTitle("Tetris");
+		Window().SetTitle("Tetris");
 	}
 
 	// We will update that string variable
@@ -159,16 +159,16 @@ protected:
 			rotation = 0;
 		}
 
-		if (GetInput()->GetKeyState(def::Key::SPACE).pressed && DoesPieceFit(piecePos, piece, rotation + 1))
+		if (Input().GetKeyState(def::Key::SPACE).pressed && DoesPieceFit(piecePos, piece, rotation + 1))
 			rotation++;
 
-		if (GetInput()->GetKeyState(def::Key::LEFT).pressed && DoesPieceFit(piecePos + def::Vector2f(-1, 0), piece, rotation))
+		if (Input().GetKeyState(def::Key::LEFT).pressed && DoesPieceFit(piecePos + def::Vector2f(-1, 0), piece, rotation))
 			piecePos.x--;
 
-		if (GetInput()->GetKeyState(def::Key::RIGHT).pressed && DoesPieceFit(piecePos + def::Vector2f(+1, 0), piece, rotation))
+		if (Input().GetKeyState(def::Key::RIGHT).pressed && DoesPieceFit(piecePos + def::Vector2f(+1, 0), piece, rotation))
 			piecePos.x++;
 
-		if (GetInput()->GetKeyState(def::Key::DOWN).held && DoesPieceFit(piecePos + def::Vector2f(0, 5.0f * deltaTime), piece, rotation))
+		if (Input().GetKeyState(def::Key::DOWN).held && DoesPieceFit(piecePos + def::Vector2f(0, 5.0f * deltaTime), piece, rotation))
 			piecePos.y += 5.0f * deltaTime;
 
 		// If piece fits, then move it

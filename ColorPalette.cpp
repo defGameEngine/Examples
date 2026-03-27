@@ -14,7 +14,7 @@ class Sample : public def::GameEngine
 public:
 	Sample()
 	{
-		GetWindow()->SetTitle("Sample");
+		Window().SetTitle("Sample");
 	}
 
 private:
@@ -35,7 +35,7 @@ protected:
 
 	bool OnUserUpdate(float fDeltaTime) override
 	{
-		def::Vector2i vMouse = GetInput()->GetMousePosition();
+		def::Vector2i vMouse = Input().GetMousePosition();
 		def::Vector2i vPalette = vMouse / vColorSize;
 
 		// Find selected color

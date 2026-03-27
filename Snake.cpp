@@ -7,7 +7,7 @@ class Sample : public def::GameEngine
 public:
 	Sample()
 	{
-		GetWindow()->SetTitle("Sample");
+		Window().SetTitle("Sample");
 	}
 
 protected:
@@ -29,7 +29,7 @@ protected:
 protected:
 	bool OnUserCreate() override
 	{
-		worldSize = GetWindow()->GetScreenSize() / bodyPartSize;
+		worldSize = Window().GetScreenSize() / bodyPartSize;
 
 		NewGame();
 
@@ -69,17 +69,17 @@ protected:
 	{
 		if (isDead)
 		{
-			if (GetInput()->GetKeyState(def::Key::SPACE).pressed)
+			if (Input().GetKeyState(def::Key::SPACE).pressed)
 				NewGame();
 
-			DrawString(GetWindow()->GetScreenSize() / def::Vector2i(3, 2), "GAME OVER! PRESS SPACE.");
+			DrawString(Window().GetScreenSize() / def::Vector2i(3, 2), "GAME OVER! PRESS SPACE.");
 			return true;
 		}
 
-		if (GetInput()->GetKeyState(def::Key::A).pressed) dir = 0;
-		if (GetInput()->GetKeyState(def::Key::W).pressed) dir = 1;
-		if (GetInput()->GetKeyState(def::Key::D).pressed) dir = 2;
-		if (GetInput()->GetKeyState(def::Key::S).pressed) dir = 3;
+		if (Input().GetKeyState(def::Key::A).pressed) dir = 0;
+		if (Input().GetKeyState(def::Key::W).pressed) dir = 1;
+		if (Input().GetKeyState(def::Key::D).pressed) dir = 2;
+		if (Input().GetKeyState(def::Key::S).pressed) dir = 3;
 
 		if (timer >= delay)
 		{

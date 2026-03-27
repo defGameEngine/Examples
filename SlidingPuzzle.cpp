@@ -37,7 +37,7 @@ class SlidingPuzzle : public def::GameEngine
 public:
 	SlidingPuzzle()
 	{
-		GetWindow()->SetTitle("Sliding Puzzle");
+		Window().SetTitle("Sliding Puzzle");
 	}
 
 private:
@@ -69,9 +69,9 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
-		if (GetInput()->GetButtonState(def::Button::LEFT).pressed)
+		if (Input().GetButtonState(def::Button::LEFT).pressed)
 		{
-			def::Vector2i cellPos = GetInput()->GetMousePosition() / cellSize;
+			def::Vector2i cellPos = Input().GetMousePosition() / cellSize;
 
 			if (cellPos < mapSize && cellPos >= def::Vector2i(0, 0))
 			{

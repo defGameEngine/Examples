@@ -31,7 +31,7 @@ class App : public def::GameEngine
 public:
     App()
     {
-        GetWindow()->SetTitle("Lagrange");
+        Window().SetTitle("Lagrange");
     }
 
 private:

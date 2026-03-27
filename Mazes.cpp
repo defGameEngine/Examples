@@ -9,7 +9,7 @@ class Example : public def::GameEngine
 public:
     Example()
     {
-        GetWindow()->SetTitle("Example");
+        Window().SetTitle("Example");
     }
 
     const def::Vector2i mapSize = { 16, 16 };
@@ -32,7 +32,7 @@ public:
 protected:
     bool OnUserCreate() override
     {
-        def::Vector2i screenSize = GetWindow()->GetScreenSize();
+        def::Vector2i screenSize = Window().GetScreenSize();
 
         tileSize = screenSize / mapSize;
 
@@ -126,7 +126,7 @@ protected:
             DrawLine(x1 * tileSize.x, y1 * tileSize.y, x2 * tileSize.x, y2 * tileSize.y, def::WHITE);
         };
 
-        def::Vector2i screenSize = GetWindow()->GetScreenSize();
+        def::Vector2i screenSize = Window().GetScreenSize();
 
         for (int y = 0; y < mapSize.y; y++)
             for (int x = 0; x < mapSize.x; x++)

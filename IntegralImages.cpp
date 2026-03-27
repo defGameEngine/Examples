@@ -98,7 +98,7 @@ class IntegralImages : public def::GameEngine
 public:
     IntegralImages()
     {
-        GetWindow()->SetTitle("Integral images");
+        Window().SetTitle("Integral images");
     }
 
 private:

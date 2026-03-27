@@ -13,7 +13,7 @@ class Demo : public def::GameEngine
 public:
 	Demo()
 	{
-		GetWindow()->SetTitle("Demo");
+		Window().SetTitle("Demo");
 		UseOnlyTextures(true);
 	}
 
@@ -53,7 +53,7 @@ protected:
 			ss >> count;
 
 			for (int i = 0; i < count; i++)
-				AddBall(GetWindow()->GetScreenSize() / 2, { RandFloat(-1.0f, 1.0f), RandFloat(-1.0f, 1.0f) });
+				AddBall(Window().GetScreenSize() / 2, { RandFloat(-1.0f, 1.0f), RandFloat(-1.0f, 1.0f) });
 
 			output << "Added " << count << " balls";
 		}
@@ -73,7 +73,7 @@ protected:
 		}
 		else if (com == "clear")
 		{
-			GetConsole()->Clear();
+			Console().Clear();
 		}
 		else
 		{
@@ -86,27 +86,27 @@ protected:
 
 	bool OnUserUpdate(float deltaTime) override
 	{
-		if (GetInput()->GetButtonState(def::Button::LEFT).pressed)
-			AddBall(GetWindow()->GetScreenSize() / 2, { RandFloat(-1.0f, 1.0f), RandFloat(-1.0f, 1.0f) });
+		if (Input().GetButtonState(def::Button::LEFT).pressed)
+			AddBall(Window().GetScreenSize() / 2, { RandFloat(-1.0f, 1.0f), RandFloat(-1.0f, 1.0f) });
 		
-		if (GetInput()->GetKeyState(def::Key::TAB).pressed)
-			GetConsole()->Show(true);
+		if (Input().GetKeyState(def::Key::TAB).pressed)
+			Console().Show(true);
 
-		if (GetInput()->GetKeyState(def::Key::ESCAPE).pressed)
-			GetConsole()->Show(false);
+		if (Input().GetKeyState(def::Key::ESCAPE).pressed)
+			Console().Show(false);
 
 		for (auto& ball : balls)
 		{
-			if (ball.pos.x <= ballRadius || ball.pos.x >= GetWindow()->GetScreenWidth() - ballRadius)
+			if (ball.pos.x <= ballRadius || ball.pos.x >= Window().GetScreenWidth() - ballRadius)
 			{
 				ball.vel.x *= -1.0f;
-				ball.pos.x = std::clamp(ball.pos.x, (float)ballRadius, float(GetWindow()->GetScreenWidth() - ballRadius - 1));
+				ball.pos.x = std::clamp(ball.pos.x, (float)ballRadius, float(Window().GetScreenWidth() - ballRadius - 1));
 			}
 
-			if (ball.pos.y <= ballRadius || ball.pos.y >= GetWindow()->GetScreenHeight() - ballRadius)
+			if (ball.pos.y <= ballRadius || ball.pos.y >= Window().GetScreenHeight() - ballRadius)
 			{
 				ball.vel.y *= -1.0f;
-				ball.pos.y = std::clamp(ball.pos.y, (float)ballRadius, float(GetWindow()->GetScreenHeight() - ballRadius - 1));
+				ball.pos.y = std::clamp(ball.pos.y, (float)ballRadius, float(Window().GetScreenHeight() - ballRadius - 1));
 			}
 
 			ball.pos += ballSpeed * ball.vel * deltaTime;
